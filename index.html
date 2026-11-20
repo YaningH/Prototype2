@@ -1,0 +1,107 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>Typed Circle</title>
+  <meta name="claude:viewport-fit-sides" content="cover">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Bodoni+Moda:wght@400&family=Bytesized&family=Pinyon+Script&family=Comic+Neue:wght@400&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Typing screen -->
+  <canvas id="stage" aria-label="A text written in a circle, starting at the top. Type it, then press Enter: the line of marks curls into a ring on your print."></canvas>
+  <input id="typer" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="Type the text in the circle">
+  <dl id="data" class="panel" aria-label="Your typing so far"></dl>
+  <div id="topbar">
+    <button class="ctl" id="newBtn">New Text</button>
+    <label class="tfwrap"><span class="sr" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Typeface</span>
+      <select id="tfSel">
+        <option value="">Choose Typeface</option>
+        <option value="helvetica">Helvetica</option>
+        <option value="bodoni">Bodoni</option>
+        <option value="bytesized">Bytesized</option>
+        <option value="altesse">Altesse Std</option>
+        <option value="comic">Comic Sans</option>
+      </select></label>
+  </div>
+  <button class="ctl R2" id="archBtn" hidden>stats</button>
+  <button class="ctl R top" id="colBtn">View Collection</button>
+
+  <!-- Round actions -->
+  <div id="resultBar" class="bar" hidden>
+    <button class="ctl" id="nextBtn">Next Round</button>
+    <button class="ctl" id="saveBtn" hidden>Add to Collection</button>
+    <button class="ctl" id="dlPrintBtn" hidden>Download Print</button>
+  </div>
+
+  <!-- Collection, replay, and full history -->
+  <div id="col" hidden>
+    <canvas id="printCv" aria-label="Your print: every round you added, as rings, newest outside. Move over it and the letters you typed jump out; click a ring to replay how you typed it."></canvas>
+    <div id="colTop">
+      <label class="tfwrap"><span style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Show typeface</span>
+        <select id="colTf">
+          <option value="all">All Typeface</option>
+          <option value="system">Default</option>
+          <option value="helvetica">Helvetica</option>
+          <option value="bodoni">Bodoni</option>
+          <option value="bytesized">Bytesized</option>
+          <option value="altesse">Altesse Std</option>
+          <option value="comic">Comic Sans</option>
+        </select></label>
+    </div>
+    <div id="colHead">
+      <div class="who"><img class="av" id="avatar" alt="" hidden><span class="av" id="avatarBlank"></span><div><b id="whoName">You</b><span id="colInfo"></span></div></div>
+      <dl id="colStats" class="panel" aria-label="Your typing so far in this typeface"></dl>
+    </div>
+    <p id="colHint" aria-live="polite"></p>
+    <button class="ctl L" id="dlBtn" hidden>download print</button>
+    <button class="ctl" id="colStatsBtn" hidden style="right:calc(max(16px, env(safe-area-inset-right, 0px)) + 130px)">stats</button>
+    <button class="ctl R top" id="closeBtn">Back to Typing</button>
+    <button class="ctl R" id="histBtn" style="font-size:14px; color:rgba(255,255,255,.55); bottom:calc(22px + env(safe-area-inset-bottom, 0px))">Full History</button>
+    <div id="hist" hidden role="dialog" aria-label="Full history">
+      <div class="hbar"><span>Full History</span><button class="ctl" id="histClose">Close</button></div>
+      <select id="histTf" hidden><option value="all">All</option></select>
+      <div class="wrap">
+        <p class="note" id="histEmpty" hidden>No rounds yet. Choose a typeface and finish a text to start your history.</p>
+        <div id="hGridAll">
+          <div id="hLeft">
+            <div id="hName"><b id="hFirst"></b><span id="hSince"></span></div>
+            <div id="hBig"><b id="hCount"></b><span>Games Played</span></div>
+            <div id="hStats"></div>
+          </div>
+          <div id="hRight">
+            <h2>By Typeface</h2>
+            <div id="hBars" aria-label="Average speed and accuracy for each typeface, on a scale of 0 to 100"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <button class="ctl mid" id="exitReplay" hidden style="border:1px solid rgba(255,255,255,.4); padding:7px 16px; color:rgba(255,255,255,.9)">Exit Replay</button>
+  </div>
+
+  <!-- Statistics and charts -->
+  <div id="arch" hidden>
+    <button class="ctl R tbtn" id="archBack">back</button>
+    <div class="wrap">
+      <header>
+        <div><h1 id="statsTitle">Your stats</h1><p class="note" id="archInfo"></p></div>
+
+      </header>
+      <div id="statsTop">
+        <div><canvas id="ringsCv" width="680" height="680" aria-label="Every saved round as a ring, newest outside"></canvas><p id="ringsCap"></p></div>
+        <div><div id="tiles"></div><section id="habitsSec"><h2>Habits</h2><dl id="habits"></dl></section></div>
+      </div>
+      <section id="chartsSec">
+        <div><h2 id="c1t">Speed, round by round</h2><p class="note" id="c1n"></p><div class="chartwrap"><canvas id="c1" aria-label="Chart of speed"></canvas><div class="tip" hidden></div></div><div class="legend" id="c1l"></div></div>
+        <div><h2 id="c2t">Typo rate, round by round</h2><p class="note" id="c2n"></p><div class="chartwrap"><canvas id="c2" aria-label="Chart of typo rate"></canvas><div class="tip" hidden></div></div><div class="legend" id="c2l"></div></div>
+      </section>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
